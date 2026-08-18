@@ -1,0 +1,31 @@
+# Credenciales
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Archivos generados
+*.png
+diagrama_*.png
+modelo_*.png
+generar_diagramas.py
+gen_conceptual.py
+fix_registros.sql
+app.py

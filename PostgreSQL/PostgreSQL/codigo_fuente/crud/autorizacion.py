@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -45,14 +45,9 @@ def agregar(supabase):
         id_usuario = seleccionar_fk(supabase, "usuario", "id_usuario", "nombre_usuario", "Seleccione el Usuario Autorizador")
         if not id_usuario: return
         
-        nuevo = {
-            "id_voluntario": id_voluntario,
-            "id_rol": id_rol,
-            "id_usuario_autorizador": id_usuario,
-            "fecha_autorizacion": str(date.today())
-        }
-        supabase.table("autorizacion").insert(nuevo).execute()
-        console.print("[green]Autorización agregada exitosamente.[/green]")
+        fecha = str(date.today())
+        supabase.rpc('sp_insertar_autorizacion', {'p_id_vol': id_voluntario, 'p_id_rol': id_rol, 'p_id_autorizador': id_usuario, 'p_fecha': fecha}).execute()
+        console.print("[green]Autorización agregada exitosamente (Operación ejecutada via SP).[/green]")
     except Exception as e:
         console.print(f"[red]Error al agregar: {e}[/red]")
 
@@ -92,13 +87,9 @@ def editar(supabase):
         nuevo_id_usuario = pedir_edicion("ID del usuario autorizador", actual.get('id_usuario_autorizador', ''), tipo="int")
         nueva_fecha = pedir_edicion("Fecha de autorización (YYYY-MM-DD)", actual.get('fecha_autorizacion', ''), tipo="str")
         
-        updates = {
-            "id_usuario_autorizador": nuevo_id_usuario,
-            "fecha_autorizacion": nueva_fecha
-        }
-        
-        supabase.table("autorizacion").update(updates).eq("id_voluntario", id_vol).eq("id_rol", id_rol).execute()
-        console.print("[green]Autorización actualizada exitosamente.[/green]")
+        supabase.rpc('sp_eliminar_autorizacion', {'p_id_vol': id_vol, 'p_id_rol': id_rol}).execute()
+        supabase.rpc('sp_insertar_autorizacion', {'p_id_vol': id_vol, 'p_id_rol': id_rol, 'p_id_autorizador': nuevo_id_usuario, 'p_fecha': nueva_fecha}).execute()
+        console.print("[green]Autorización actualizada exitosamente (Operación ejecutada via SP).[/green]")
     except Exception as e:
         console.print(f"[red]Error al editar: {e}[/red]")
 
@@ -108,8 +99,8 @@ def eliminar(supabase):
     id_rol = pedir("ID del rol: ", tipo="int")
     try:
         if confirmar("¿Está seguro de eliminar esta autorización?"):
-            supabase.table("autorizacion").delete().eq("id_voluntario", id_vol).eq("id_rol", id_rol).execute()
-            console.print("[green]Autorización eliminada.[/green]")
+            supabase.rpc('sp_eliminar_autorizacion', {'p_id_vol': id_vol, 'p_id_rol': id_rol}).execute()
+            console.print("[green]Autorización eliminada (Operación ejecutada via SP).[/green]")
         else:
             console.print("[yellow]Operación cancelada.[/yellow]")
     except Exception as e:

@@ -20,18 +20,10 @@ def crear(supabase):
     nombre_evento = pedir("Nombre del Evento: ")
     fecha_programada = pedir("Fecha Programada (YYYY-MM-DD): ")
     ubicacion = pedir("Ubicación: ")
-    
-    datos = {
-        "id_grupo": id_grupo,
-        "id_categoria": id_categoria,
-        "nombre_evento": nombre_evento,
-        "fecha_programada": fecha_programada,
-        "ubicacion": ubicacion
-    }
-    
+        
     try:
-        res = supabase.table("evento").insert(datos).execute()
-        console.print(f"[bold green]Evento creado exitosamente. ID: {res.data[0]['id_evento']}[/bold green]")
+        res = supabase.rpc('sp_insertar_evento', {'p_id_grupo': id_grupo, 'p_id_categoria': id_categoria, 'p_nombre': nombre_evento, 'p_fecha': fecha_programada, 'p_ubicacion': ubicacion}).execute()
+        console.print("[bold green]Evento creado exitosamente (Operación ejecutada via SP).[/bold green]")
     except Exception as e:
         console.print(f"[bold red]Error al crear evento: {e}[/bold red]")
 
@@ -104,16 +96,8 @@ def actualizar(supabase):
         fecha_programada = pedir_edicion("Fecha Programada", actual.get("fecha_programada"))
         ubicacion = pedir_edicion("Ubicación", actual.get("ubicacion"))
         
-        datos = {
-            "id_grupo": int(id_grupo_str) if id_grupo_str.isdigit() else actual.get("id_grupo"),
-            "id_categoria": int(id_categoria_str) if id_categoria_str.isdigit() else actual.get("id_categoria"),
-            "nombre_evento": nombre_evento,
-            "fecha_programada": fecha_programada,
-            "ubicacion": ubicacion
-        }
-        
-        res = supabase.table("evento").update(datos).eq("id_evento", id_evento).execute()
-        console.print("[bold green]Evento actualizado exitosamente.[/bold green]")
+        res = supabase.rpc('sp_actualizar_evento', {'p_id': id_evento, 'p_id_grupo': int(id_grupo_str) if id_grupo_str.isdigit() else actual.get("id_grupo"), 'p_id_categoria': int(id_categoria_str) if id_categoria_str.isdigit() else actual.get("id_categoria"), 'p_nombre': nombre_evento, 'p_fecha': fecha_programada, 'p_ubicacion': ubicacion}).execute()
+        console.print("[bold green]Evento actualizado exitosamente (Operación ejecutada via SP).[/bold green]")
         
     except Exception as e:
         console.print(f"[bold red]Error al actualizar evento: {e}[/bold red]")
@@ -124,8 +108,8 @@ def eliminar(supabase):
     
     if confirmar(f"¿Está seguro de eliminar el evento {id_evento}?"):
         try:
-            supabase.table("evento").delete().eq("id_evento", id_evento).execute()
-            console.print("[bold green]Evento eliminado exitosamente.[/bold green]")
+            supabase.rpc('sp_eliminar_evento', {'p_id': id_evento}).execute()
+            console.print("[bold green]Evento eliminado exitosamente (Operación ejecutada via SP).[/bold green]")
         except Exception as e:
             console.print(f"[bold red]Error al eliminar evento: {e}[/bold red]")
 

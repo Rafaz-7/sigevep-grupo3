@@ -38,13 +38,8 @@ def agregar(supabase):
         
         cantidad = pedir("Cantidad requerida: ", tipo="int")
         
-        nuevo = {
-            "id_evento": id_evento,
-            "id_rol": id_rol,
-            "cantidad_requerida": cantidad
-        }
-        supabase.table("requerimiento").insert(nuevo).execute()
-        console.print("[green]Requerimiento agregado exitosamente.[/green]")
+        supabase.rpc('sp_insertar_requerimiento', {'p_id_evento': id_evento, 'p_id_rol': id_rol, 'p_cantidad': cantidad}).execute()
+        console.print("[green]Requerimiento agregado exitosamente (Operación ejecutada via SP).[/green]")
     except Exception as e:
         console.print(f"[red]Error al agregar: {e}[/red]")
 
@@ -79,12 +74,8 @@ def editar(supabase):
         
         nueva_cantidad = pedir_edicion("Cantidad requerida", actual['cantidad_requerida'], tipo="int")
         
-        updates = {
-            "cantidad_requerida": nueva_cantidad
-        }
-        
-        supabase.table("requerimiento").update(updates).eq("id_requerimiento", id_req).execute()
-        console.print("[green]Requerimiento actualizado exitosamente.[/green]")
+        supabase.rpc('sp_actualizar_requerimiento', {'p_id': id_req, 'p_cantidad': nueva_cantidad}).execute()
+        console.print("[green]Requerimiento actualizado exitosamente (Operación ejecutada via SP).[/green]")
     except Exception as e:
         console.print(f"[red]Error al editar: {e}[/red]")
 
@@ -93,8 +84,8 @@ def eliminar(supabase):
     id_req = pedir("ID del requerimiento a eliminar: ", tipo="int")
     try:
         if confirmar("¿Está seguro de eliminar este requerimiento?"):
-            supabase.table("requerimiento").delete().eq("id_requerimiento", id_req).execute()
-            console.print("[green]Requerimiento eliminado.[/green]")
+            supabase.rpc('sp_eliminar_requerimiento', {'p_id': id_req}).execute()
+            console.print("[green]Requerimiento eliminado (Operación ejecutada via SP).[/green]")
         else:
             console.print("[yellow]Operación cancelada.[/yellow]")
     except Exception as e:

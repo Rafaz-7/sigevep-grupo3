@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-# =============================================================================
-# SISTEMA DE GESTIÓN DE VOLUNTARIOS PARA EVENTOS (SIGEVEP)
-# Grupo #3 — Sistemas de Bases de Datos 1 — ESPOL
-#
-# Aplicación CRUD completa conectada a Supabase (PostgreSQL)
-# =============================================================================
+
 import os, sys
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
@@ -49,7 +44,7 @@ def mostrar_banner():
     banner.append("SISTEMA DE GESTION DE VOLUNTARIOS\n", style="bold cyan")
     banner.append("SIGEVEP — Grupo #3\n", style="bold white")
     banner.append("Sistemas de Bases de Datos 1 - ESPOL\n", style="dim")
-    banner.append("CRUD Completo — Avance 02", style="dim italic")
+    banner.append("Avance 03", style="dim italic")
     panel = Panel(banner, border_style="bright_cyan", box=box.DOUBLE,
                   padding=(1, 4), title="[bold white]ESPOL[/]",
                   subtitle="[dim]Primer Termino 2026-2027[/]")

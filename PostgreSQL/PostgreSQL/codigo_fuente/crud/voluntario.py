@@ -22,25 +22,10 @@ def crear(supabase):
     nivel_capacidad_fisica = pedir("Nivel Capacidad Física (Alto/Medio/Bajo): ", opciones=["Alto", "Medio", "Bajo"])
     tipo_limitacion_fisica = pedir("Tipo Limitación Física (Opcional): ", obligatorio=False)
     descripcion_limitacion = pedir("Descripción Limitación Física (Opcional): ", obligatorio=False)
-    
-    datos = {
-        "id_grupo": id_grupo,
-        "nombres": nombres,
-        "apellidos": apellidos,
-        "telefono": telefono,
-        "fecha_nacimiento": fecha_nacimiento,
-        "estado_operativo": estado_operativo,
-        "nivel_capacidad_fisica": nivel_capacidad_fisica,
-    }
-    
-    if tipo_limitacion_fisica:
-        datos["tipo_limitacion_fisica"] = tipo_limitacion_fisica
-    if descripcion_limitacion:
-        datos["descripcion_limitacion"] = descripcion_limitacion
         
     try:
-        res = supabase.table("voluntario").insert(datos).execute()
-        console.print(f"[bold green]Voluntario creado exitosamente. ID: {res.data[0]['id_voluntario']}[/bold green]")
+        res = supabase.rpc('sp_insertar_voluntario', {'p_id_grupo': id_grupo, 'p_nombres': nombres, 'p_apellidos': apellidos, 'p_telefono': telefono, 'p_fecha_nac': fecha_nacimiento, 'p_estado': estado_operativo, 'p_nivel_fisico': nivel_capacidad_fisica, 'p_tipo_limit': tipo_limitacion_fisica, 'p_desc_limit': descripcion_limitacion}).execute()
+        console.print("[bold green]Voluntario creado exitosamente (Operación ejecutada via SP).[/bold green]")
     except Exception as e:
         console.print(f"[bold red]Error al crear voluntario: {e}[/bold red]")
 
@@ -123,20 +108,8 @@ def actualizar(supabase):
         tipo_limitacion_fisica = pedir_edicion("Tipo Limitación", actual.get("tipo_limitacion_fisica") or "")
         descripcion_limitacion = pedir_edicion("Descripción Limitación", actual.get("descripcion_limitacion") or "")
         
-        datos = {
-            "id_grupo": int(id_grupo_str) if id_grupo_str.isdigit() else actual.get("id_grupo"),
-            "nombres": nombres,
-            "apellidos": apellidos,
-            "telefono": telefono,
-            "fecha_nacimiento": fecha_nacimiento,
-            "estado_operativo": estado_operativo,
-            "nivel_capacidad_fisica": nivel_capacidad_fisica,
-            "tipo_limitacion_fisica": tipo_limitacion_fisica if tipo_limitacion_fisica else None,
-            "descripcion_limitacion": descripcion_limitacion if descripcion_limitacion else None
-        }
-        
-        res = supabase.table("voluntario").update(datos).eq("id_voluntario", id_voluntario).execute()
-        console.print("[bold green]Voluntario actualizado exitosamente.[/bold green]")
+        res = supabase.rpc('sp_actualizar_voluntario', {'p_id': id_voluntario, 'p_id_grupo': int(id_grupo_str) if id_grupo_str.isdigit() else actual.get("id_grupo"), 'p_nombres': nombres, 'p_apellidos': apellidos, 'p_telefono': telefono, 'p_fecha_nac': fecha_nacimiento, 'p_estado': estado_operativo, 'p_nivel_fisico': nivel_capacidad_fisica, 'p_tipo_limit': tipo_limitacion_fisica if tipo_limitacion_fisica else None, 'p_desc_limit': descripcion_limitacion if descripcion_limitacion else None}).execute()
+        console.print("[bold green]Voluntario actualizado exitosamente (Operación ejecutada via SP).[/bold green]")
         
     except Exception as e:
         console.print(f"[bold red]Error al actualizar voluntario: {e}[/bold red]")
@@ -147,8 +120,8 @@ def eliminar(supabase):
     
     if confirmar(f"¿Está seguro de eliminar el voluntario {id_voluntario}?"):
         try:
-            supabase.table("voluntario").delete().eq("id_voluntario", id_voluntario).execute()
-            console.print("[bold green]Voluntario eliminado exitosamente.[/bold green]")
+            supabase.rpc('sp_eliminar_voluntario', {'p_id': id_voluntario}).execute()
+            console.print("[bold green]Voluntario eliminado exitosamente (Operación ejecutada via SP).[/bold green]")
         except Exception as e:
             console.print(f"[bold red]Error al eliminar voluntario: {e}[/bold red]")
 

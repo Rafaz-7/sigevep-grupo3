@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import sys
 import os
 
-# Ajustar el path para importar helpers
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from helpers import *
@@ -48,16 +47,8 @@ def crear(supabase):
         nombre = pedir("Nombre del grupo")
         descripcion = pedir("Descripción del grupo", obligatorio=False)
 
-        datos_insert = {
-            "nombre_grupo": nombre,
-            "descripcion_grupo": descripcion
-        }
-
-        respuesta = supabase.table("grupo_pastoral").insert(datos_insert).execute()
-        if respuesta.data:
-            console.print("[bold green]Grupo pastoral creado exitosamente.[/bold green]")
-        else:
-            console.print("[bold red]No se pudo crear el grupo pastoral.[/bold red]")
+        respuesta = supabase.rpc('sp_insertar_grupo_pastoral', {'p_nombre': nombre, 'p_descripcion': descripcion}).execute()
+        console.print("[bold green]Grupo pastoral creado exitosamente (Operación ejecutada via SP).[/bold green]")
     except Exception as e:
         console.print(f"[bold red]Error al crear el grupo pastoral:[/bold red] {e}")
 
@@ -76,16 +67,8 @@ def editar(supabase):
         nombre_nuevo = pedir_edicion("Nombre", grupo_actual["nombre_grupo"])
         desc_nueva = pedir_edicion("Descripción", grupo_actual.get("descripcion_grupo", ""))
 
-        datos_update = {
-            "nombre_grupo": nombre_nuevo,
-            "descripcion_grupo": desc_nueva
-        }
-
-        respuesta_update = supabase.table("grupo_pastoral").update(datos_update).eq("id_grupo", id_grupo).execute()
-        if respuesta_update.data:
-            console.print("[bold green]Grupo pastoral actualizado exitosamente.[/bold green]")
-        else:
-            console.print("[bold red]No se pudo actualizar el grupo pastoral.[/bold red]")
+        respuesta_update = supabase.rpc('sp_actualizar_grupo_pastoral', {'p_id': id_grupo, 'p_nombre': nombre_nuevo, 'p_descripcion': desc_nueva}).execute()
+        console.print("[bold green]Grupo pastoral actualizado exitosamente (Operación ejecutada via SP).[/bold green]")
     except Exception as e:
         console.print(f"[bold red]Error al actualizar el grupo pastoral:[/bold red] {e}")
 
@@ -101,11 +84,8 @@ def eliminar(supabase):
 
         grupo = respuesta.data[0]
         if confirmar(f"¿Está seguro que desea eliminar el grupo '{grupo['nombre_grupo']}'?"):
-            res_delete = supabase.table("grupo_pastoral").delete().eq("id_grupo", id_grupo).execute()
-            if res_delete.data:
-                console.print("[bold green]Grupo pastoral eliminado exitosamente.[/bold green]")
-            else:
-                console.print("[bold red]No se pudo eliminar el grupo pastoral.[/bold red]")
+            res_delete = supabase.rpc('sp_eliminar_grupo_pastoral', {'p_id': id_grupo}).execute()
+            console.print("[bold green]Grupo pastoral eliminado exitosamente (Operación ejecutada via SP).[/bold green]")
         else:
             console.print("[yellow]Operación cancelada.[/yellow]")
     except Exception as e:

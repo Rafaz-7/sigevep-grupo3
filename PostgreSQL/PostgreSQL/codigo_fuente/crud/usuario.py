@@ -93,30 +93,15 @@ def agregar_usuario(supabase):
     if not rol: return
 
     try:
-        nuevo_usuario = {
-            "nombre_usuario": nombre,
-            "clave_acceso": clave,
-            "rol_acceso": rol
-        }
-        res_usuario = supabase.table('usuario').insert(nuevo_usuario).execute().data
-        
-        if res_usuario:
-            id_usuario = res_usuario[0]['id_usuario']
+        nivel = None
+        zona = None
+        if rol == 'Administrador':
+            nivel = pedir("Nivel de permiso", opciones=["Total", "Parcial"])
+        elif rol == 'Coordinador':
+            zona = pedir("Zona asignada")
             
-            if rol == 'Administrador':
-                nivel = pedir("Nivel de permiso", opciones=["Total", "Parcial"])
-                supabase.table('administrador').insert({
-                    "id_usuario": id_usuario,
-                    "nivel_permiso": nivel
-                }).execute()
-            elif rol == 'Coordinador':
-                zona = pedir("Zona asignada")
-                supabase.table('coordinador').insert({
-                    "id_usuario": id_usuario,
-                    "zona_asignada": zona
-                }).execute()
-                
-            console.print(f"[bold green]Usuario añadido exitosamente con ID {id_usuario}.[/bold green]")
+        supabase.rpc('sp_insertar_usuario', {'p_nombre': nombre, 'p_clave': clave, 'p_rol': rol, 'p_nivel_permiso': nivel, 'p_zona': zona}).execute()
+        console.print(f"[bold green]Usuario añadido exitosamente (Operación ejecutada via SP).[/bold green]")
     except Exception as e:
         console.print(f"[red]Error al añadir usuario: {e}[/red]")
 
@@ -135,28 +120,21 @@ def editar_usuario(supabase):
         nuevo_nombre = pedir_edicion("Nombre de usuario", u['nombre_usuario'])
         nueva_clave = pedir_edicion("Clave de acceso", u['clave_acceso'])
         
-        update_data = {}
-        if nuevo_nombre != u['nombre_usuario']: update_data['nombre_usuario'] = nuevo_nombre
-        if nueva_clave != u['clave_acceso']: update_data['clave_acceso'] = nueva_clave
+        nivel = None
+        zona = None
         
-        if update_data:
-            supabase.table('usuario').update(update_data).eq('id_usuario', id_usuario).execute()
-            
         if u['rol_acceso'] == 'Administrador':
             admin = supabase.table('administrador').select('*').eq('id_usuario', id_usuario).execute().data
             if admin:
-                nuevo_nivel = pedir_edicion("Nivel de permiso", admin[0]['nivel_permiso'], opciones=["Total", "Parcial"])
-                if nuevo_nivel != admin[0]['nivel_permiso']:
-                    supabase.table('administrador').update({'nivel_permiso': nuevo_nivel}).eq('id_usuario', id_usuario).execute()
+                nivel = pedir_edicion("Nivel de permiso", admin[0]['nivel_permiso'], opciones=["Total", "Parcial"])
                     
         elif u['rol_acceso'] == 'Coordinador':
             coord = supabase.table('coordinador').select('*').eq('id_usuario', id_usuario).execute().data
             if coord:
-                nueva_zona = pedir_edicion("Zona asignada", coord[0]['zona_asignada'])
-                if nueva_zona != coord[0]['zona_asignada']:
-                    supabase.table('coordinador').update({'zona_asignada': nueva_zona}).eq('id_usuario', id_usuario).execute()
+                zona = pedir_edicion("Zona asignada", coord[0]['zona_asignada'])
 
-        console.print("[bold green]Usuario actualizado exitosamente.[/bold green]")
+        supabase.rpc('sp_actualizar_usuario', {'p_id': id_usuario, 'p_nombre': nuevo_nombre, 'p_clave': nueva_clave, 'p_nivel_permiso': nivel, 'p_zona': zona}).execute()
+        console.print("[bold green]Usuario actualizado exitosamente (Operación ejecutada via SP).[/bold green]")
     except Exception as e:
         console.print(f"[red]Error al editar usuario: {e}[/red]")
 
@@ -172,13 +150,8 @@ def eliminar_usuario(supabase):
             return
 
         if confirmar(f"¿Está seguro que desea eliminar el usuario ID {id_usuario}?"):
-            # Eliminar de subtipos primero por integridad referencial
-            supabase.table('administrador').delete().eq('id_usuario', id_usuario).execute()
-            supabase.table('coordinador').delete().eq('id_usuario', id_usuario).execute()
-            
-            # Eliminar de tabla padre
-            supabase.table('usuario').delete().eq('id_usuario', id_usuario).execute()
-            console.print("[bold green]Usuario eliminado exitosamente.[/bold green]")
+            supabase.rpc('sp_eliminar_usuario', {'p_id': id_usuario}).execute()
+            console.print("[bold green]Usuario eliminado exitosamente (Operación ejecutada via SP).[/bold green]")
         else:
             console.print("[yellow]Operación cancelada.[/yellow]")
     except Exception as e:

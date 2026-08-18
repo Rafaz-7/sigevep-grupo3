@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Utilidades compartidas para todos los módulos CRUD."""
 from rich.console import Console
 from rich.table import Table
@@ -29,7 +29,6 @@ def mostrar_tabla(datos, columnas, titulo="", color_header="bold white on dark_b
             key = col[1]
             val = row.get(key, "")
             if isinstance(val, dict):
-                # Nested FK object - get first string value
                 val = next((v for v in val.values() if isinstance(v, str)), str(val))
             vals.append(str(val) if val is not None else "—")
         tabla.add_row(*vals)
